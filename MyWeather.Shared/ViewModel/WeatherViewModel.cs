@@ -1,3 +1,5 @@
+using Microsoft.AppCenter.Analytics;
+
 using MyWeather.Helpers;
 using MyWeather.Models;
 using MyWeather.Services;
@@ -86,6 +88,13 @@ namespace MyWeather.ViewModels
             if (IsBusy)
                 return;
 
+            Microsoft.AppCenter.Analytics.Analytics.TrackEvent($"Get weather requested");
+
+            if (string.IsNullOrWhiteSpace(Location))
+            {
+                throw new Exception("Location crash bug!");
+            }
+
             IsBusy = true;
             try
             {
@@ -121,6 +130,14 @@ namespace MyWeather.ViewModels
             catch (Exception ex)
             {
                 Temp = "Unable to get Weather";
+
+                Microsoft.AppCenter.Crashes.Crashes.TrackError(ex,
+                    new System.Collections.Generic.Dictionary<string, string>
+                {
+                    {"Location",Location.Trim()},
+                    {"UseGPS",UseGPS.ToString()},
+                    {"Issue","Unable to get weather"}
+                });
             }
             finally
             {
@@ -140,7 +157,7 @@ namespace MyWeather.ViewModels
                     var title = "Location Permission";
                     var question = "To get your current city the location permission is required. Please go into Settings and turn on Location for the app.";
                     var positive = "Settings";
-                    var negative = "Maybe Later";
+                    var negative = "Maybe Later?";
                     var task = Application.Current?.MainPage?.DisplayAlert(title, question, positive, negative);
                     if (task == null)
                         return false;
@@ -165,7 +182,7 @@ namespace MyWeather.ViewModels
                     var title = "Location Permission";
                     var question = "To get your current city the location permission is required.";
                     var positive = "Settings";
-                    var negative = "Maybe Later";
+                    var negative = "Maybe Later?";
                     var task = Application.Current?.MainPage?.DisplayAlert(title, question, positive, negative);
                     if (task == null)
                         return false;
